@@ -10,17 +10,33 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class FinalPipeline {
 	public static void main(String[] args) {
 
 		String pathOriginal = "src/main/resources/original/";
 		String pathModified = "src/main/resources/modified/";
+		String pathTerm = "src/main/resources/term/";
 
     	File file = new File(pathOriginal);
         String[] filelist = file.list();
         for (int i = 0; i < filelist.length; i++) {
                 modify(pathOriginal+filelist[i],filelist[i]);
-                }
+        }
+
+        File termFile = new File(pathTerm+"word_index");
+        List<String> terms = new ArrayList<>();
+        try {
+        	BufferedReader reader=new BufferedReader(new InputStreamReader(new FileInputStream(termFile)));
+        	String line = "";
+        	while((line=reader.readLine())!=null) {
+        		terms.add(line.split("	")[1]);
+        	}
+        }
+    	catch (IOException e)
+        {
+           e.printStackTrace();
+         }
 
         List<List<List<String>>> textss = new ArrayList<>();
 
@@ -62,7 +78,69 @@ public class FinalPipeline {
                  }
 
     		}
+
+        List<List<List<Double>>> tfIdfForAll = new ArrayList<>();
+        for(List<List<String>> texts: textss) {
+        	List<List<Double>> tfIdfForFile = new ArrayList<>();
+        	for(String term: terms) {
+        		List<Double> tfIdfForTerm = tfIdf(texts, term);
+        		System.out.println(tfIdfForTerm);
+        		tfIdfForFile.add(tfIdfForTerm);
+        	}
+        	tfIdfForAll.add(tfIdfForFile);
+        	tfIdfForFile = new ArrayList<>();
         }
+    }
+
+	public static List<Double> tfIdf(List<List<String>> texts, String term)
+	{
+		double wordAppear = 0;
+		double docAppear = 0;
+		double wordSum = 0;
+		List<Double> list = new ArrayList<>();
+
+		for(int i=0;i<texts.size();i++) {
+			for(String word: texts.get(i)) {
+				if(word.equalsIgnoreCase(term)) {
+					docAppear++;
+					break;
+				}
+			}
+		}
+
+		for(int i = 0;i<texts.size();i++) {
+			for(String word: texts.get(i)) {
+				if(word.equalsIgnoreCase(term)) {
+					wordAppear++;
+				}
+				wordSum++;
+			}
+			if(wordAppear>0) {
+				list.add(1+Math.log10(wordAppear));
+			}
+			else {
+				list.add(0.0);
+			}
+			wordAppear = 0;
+			wordSum = 0;
+		}
+
+		for(int i = 0; i<list.size();i++) {
+			list.set(i, list.get(i)*Math.log10(texts.size()/docAppear));
+		}
+
+		return list;
+
+
+
+//		System.out.println(wordAppear+" "+wordSum+" "+docAppear+" "+texts.size());
+//		if(wordAppear>0) {
+//			return Math.log10(texts.size()/docAppear)*(1+Math.log10(wordAppear/wordSum));
+//		}
+//		return 0;
+	}
+
+
 
 
 	public static void modify(String path, String fileName)
