@@ -1,7 +1,14 @@
 package org.dkpro.tc.ml.libsvm;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.dkpro.tc.ml.libsvm.api.LibsvmPredict;
 import org.dkpro.tc.ml.libsvm.api.LibsvmTrainModel;
 
@@ -25,6 +32,40 @@ public class SvmPipeline {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		try {
+//        	File createTempFile = FileUtil.createTempFile("labelModified", ".tmp");
+        	BufferedWriter bw = new BufferedWriter(
+                    new OutputStreamWriter(new FileOutputStream("src/main/resources/OutputCompare.dat")));
+        	File output = new File("src/main/resources/WingOfVictoryOutput");
+        	File test = new File("src/main/resources/WingOfVictoryTest");
+
+        	List<Double> outputs = new ArrayList<>();
+            for (String s : FileUtils.readLines(output)) {
+                if (s.isEmpty()) {
+                    continue;
+                }
+                outputs.add(Double.parseDouble(s));
+            }
+            List<Double> tests = new ArrayList<>();
+            for (String s : FileUtils.readLines(test)) {
+                if (s.isEmpty()) {
+                    continue;
+                }
+                tests.add(Double.parseDouble(s.split("\t")[0]));
+            }
+            for (int i=0;i<outputs.size();i++) {
+            	bw.write(String.valueOf(outputs.get(i)));
+            	bw.write("("+String.valueOf(tests.get(i))+")");
+            	bw.write("\n");
+            }
+            bw.close();
+        }
+    	catch (IOException e)
+        {
+           e.printStackTrace();
+         }
+
 
 
 
